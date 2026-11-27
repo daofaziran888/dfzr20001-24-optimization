@@ -24,6 +24,10 @@ class Store:
         self._idempotency: dict[str, dict[str, Any]] = {}
         # 冻结标记：被不合格处置关联的记录 id -> True
         self._frozen: dict[tuple[str, int], str] = {}
+        # 含水率补测条：独立于干燥确认及上游工序引用，按「炉次 + 盘号」归属
+        self._moisture_retests: list[dict[str, Any]] = []
+        # 精制领取单：记录实际领出的盘、使用的含水结果与重试原因
+        self._grading_pickups: list[dict[str, Any]] = []
         # 初始化建种子血缘索引
         self._build_lineage_from_seed()
 
@@ -116,6 +120,28 @@ class Store:
 
     def record_idempotent(self, request_id: str, result: dict[str, Any]) -> None:
         self._idempotency[request_id] = dict(result)
+
+    # ── 含水率补测条 / 精制领取单 ──
+
+    def moisture_retests(self) -> list[dict[str, Any]]:
+        """干燥补测条：每条一次实测，按炉次+盘归属，独立于干燥记录的上游工序引用。"""
+        return self._moisture_retests
+
+    def grading_pickups(self) -> list[dict[str, Any]]:
+        """精制领取单：记录实际领出的盘、使用的含水结果与重试原因。"""
+        return self._grading_pickups
+
+    def find_moisture_retest(self, retest_id: int) -> dict[str, Any] | None:
+        for row in self._moisture_retests:
+            if int(row.get("id", 0)) == retest_id:
+                return row
+        return None
+
+    def find_grading_pickup(self, pickup_id: int) -> dict[str, Any] | None:
+        for row in self._grading_pickups:
+            if int(row.get("id", 0)) == pickup_id:
+                return row
+        return None
 
     # ── 冻结 ──
 

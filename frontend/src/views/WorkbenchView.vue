@@ -62,6 +62,14 @@
       </div>
     </div>
 
+    <MoistureConsistencyPanel
+      v-if="hasConsistencyPanel"
+      :module-key="meta.key"
+      :selected-entry="selectedEntry"
+      @changed="reload"
+      @clear-entry="selectedEntry = null"
+    />
+
     <table class="data-table">
       <thead>
         <tr>
@@ -84,6 +92,15 @@
               @click="runAction(action, row)"
             >
               {{ action }}
+            </button>
+            <button
+              v-if="hasConsistencyPanel"
+              class="link consistency-link"
+              type="button"
+              :data-testid="`consistency-${row.id}`"
+              @click="selectedEntry = row"
+            >
+              {{ meta.key === 'drying' ? '补测/查看补测条' : '领取/查补测' }}
             </button>
             <button
               v-if="row['批次号']"
@@ -145,6 +162,7 @@ import {
   runAction as applyAction,
 } from '@/api/backend-service'
 import { fetchTraceChain } from '@/api/pipeline-client'
+import MoistureConsistencyPanel from '@/views/MoistureConsistencyPanel.vue'
 import type { EntryRow } from '@/data/types'
 
 const props = defineProps<{ moduleKey: string }>()
@@ -169,6 +187,9 @@ const PROCESS_NAMES: Record<string, string> = {
   trace_code: '溯源码段', shipment: '发运交接',
 }
 const isProcessModule = computed(() => PROCESS_ORDER.includes(meta.key))
+// 干燥补测条 / 精制领取面板只在干燥和分级两个模块出现。
+const hasConsistencyPanel = computed(() => meta.key === 'drying' || meta.key === 'grading')
+const selectedEntry = ref<EntryRow | null>(null)
 // 批次追溯
 const showTrace = ref(false)
 const traceBatchNo = ref('')
@@ -358,7 +379,7 @@ onMounted(reload)
   margin: 0 2px;
   padding-top: 8px;
 }
-.trace-link, .upstream-link {
+.trace-link, .upstream-link, .consistency-link {
   color: #27ae60 !important;
   margin-left: 6px;
   padding: 2px 6px;
@@ -368,7 +389,7 @@ onMounted(reload)
   text-decoration: none;
   cursor: pointer;
 }
-.trace-link:hover, .upstream-link:hover {
+.trace-link:hover, .upstream-link:hover, .consistency-link:hover {
   background: #27ae60;
   color: white !important;
 }

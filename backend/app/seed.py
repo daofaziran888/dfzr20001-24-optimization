@@ -248,6 +248,8 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   'status': '已确认',
   'pending': False,
   'abnormal': False,
+  '炉次': 'L-2026-11-A',
+  '批次号': 'BATCH-20261101-A',
   '起始温度': '干燥工序样例3',
   '终止温度': '干燥工序样例3',
   '干燥时长': '干燥工序样例3',
